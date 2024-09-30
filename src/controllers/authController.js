@@ -4,6 +4,31 @@ const { check, validationResult } = require("express-validator");
 const User = require("../models/User");
 
 
+// fonction d'envoyer un e-mail de vérification
+async function sendVerificationEmail(user) {
+  const transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user: process.env.EMAIL,
+      pass: process.env.EMAIL_PASSWORD,
+    },
+  });
+
+  const mailOptions = {
+    from: process.env.EMAIL,
+    to: user.email,
+    subject: "Vérification de votre e-mail",
+    html: `<a href="${process.env.BASE_URL}/verify/${user._id}">Vérifiez votre e-mail ici</a>`,
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    console.log("E-mail de vérification envoyé à " + user.email);
+  } catch (error) {
+    console.error("Erreur lors de l'envoi de l'e-mail : ", error);
+  }
+}
+
 // fonction de vérification de l'e-mail
 exports.verifyEmail = async (req, res) => {
   try {
@@ -55,6 +80,8 @@ exports.register = [
       // Sauvegarder l'utilisateur
       await user.save();
 
+      // Envoyer un e-mail de vérification
+      await sendVerificationEmail(user);
 
       res.status(201).json({
         message: "Utilisateur enregistré. Veuillez vérifier votre e-mail.",
