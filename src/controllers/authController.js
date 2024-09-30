@@ -48,8 +48,13 @@ exports.register = [
       // Créer un nouvel utilisateur
       user = new User({ name, email, password });
 
+      // Hacher le mot de passe
+      const salt = await bcrypt.genSalt(10);
+      user.password = await bcrypt.hash(password, salt);
+
       // Sauvegarder l'utilisateur
       await user.save();
+
 
       res.status(201).json({
         message: "Utilisateur enregistré. Veuillez vérifier votre e-mail.",
